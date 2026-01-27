@@ -1,20 +1,22 @@
-<?php
+<?php 
 namespace App\Service;
 use App\Entity\Transaction;
-use App\Storage\JsonStorage;
-
-
+use App\Storage\StorageInterface;
 class PortfolioService {
-    public function __construct(private JsonStorage $storage)
-    {
+    // Inject the INTERFACE, not the CLASS
+    public function __construct(private StorageInterface $storage) {}
+
+    public function addTransaction(Transaction $t): void {
+        $this->storage->addTransaction($t);
+    }
+
+    public function getSummary(): array {
+        $transactions = $this->storage->getAllTransactions();
+        $total = array_reduce($transactions, fn($carry, $t) => $carry + $t->amountInCents, 0);
         
-    }
-    public function addTransaction(Transaction $t): void{
-       $this->storage->addTransaction($t);
-    }
-    public function getSummary() : int {
-        return array_reduce($this->storage->getAllTransactions(), function (int $carry, Transaction $transaction) {
-            return $carry + $transaction->amountInCents;
-        }, 0);
+        return [
+            'total' => $total,
+            'count' => count($transactions)
+        ];
     }
 }
